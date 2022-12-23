@@ -30,7 +30,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVE
 * four separate macros instead of two with parameters  
 
 |original                               |modified                    |
-|---------------------------------------|----------------------------|
+|:--------------------------------------|:---------------------------|
 |ATOMIC_BLOCK(ATOMIC_RESTORESTATE)      |ATOMIC_BLOCK_RESTORESTATE   | 
 |ATOMIC_BLOCK(ATOMIC_FORCEON)           |ATOMIC_BLOCK_FORCEON        |
 |NONATOMIC_BLOCK(NONATOMIC_RESTORESTATE)|NONATOMIC_BLOCK_RESTORESTATE|
