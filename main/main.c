@@ -36,9 +36,7 @@
 
 /* ===== private variables ===== */
 
-/* simulated shared word */
-static volatile uint16_t shared_high_word;
-static volatile uint16_t shared_low_word;
+static volatile uint32_t shared; 
 
 /* ===== public variables ===== */
 
@@ -61,9 +59,8 @@ __interrupt void Timer3_A0 (void)
         LED_RED_OUT ^= LED_RED_BIT;
     }
 
-    /* modify the shared word */
-    shared_high_word = 0x0000;
-    shared_low_word  = 0xffff;
+    /* modify the shared variable */
+    shared = (uint32_t)0x0000ffff;
 }
 
 /* ===== public functions ===== */
@@ -109,46 +106,35 @@ int main(void)
 #if 1 /* bad, interrupt in between possible */
     while (1)
     {
-        shared_low_word  = 0x0000;
-        shared_high_word = 0x0001;
+        shared = (uint32_t)0x00010000;
 
-        if(shared_low_word == 0x0000)
+        if(shared == (uint32_t)0x00000000)
         {
-            if(shared_high_word == 0x0000)
-            {
-                /* should never be reached */
-                LED_GREEN_OUT ^= LED_GREEN_BIT;
-                unsigned n = 60000;
-                while(n--);
-            }
+            /* should never be reached */
+            LED_GREEN_OUT ^= LED_GREEN_BIT;
+            unsigned n = 60000;
+            while(n--);
         }
     }
 #endif
 
 #if 0 /* good, interrupt in between blocked */
-    uint16_t copy_high_word;
-    uint16_t copy_low_word;
-
+    uint32_t copy;
     while (1)
     {
-        shared_low_word  = 0x0000;
-        shared_high_word = 0x0001;
+        shared = (uint32_t)0x00010000;
 
         ATOMIC_BLOCK_FORCEON
         (
-          copy_low_word  = shared_low_word;
-          copy_high_word = shared_high_word;
+            copy = shared;
         )
 
-        if(copy_low_word == 0x0000)
+        if(copy == (uint32_t)0x00000000)
         {
-            if(copy_high_word == 0x0000)
-            {
-                /* should never be reached */
-                LED_GREEN_OUT |= LED_GREEN_BIT;
-                unsigned n = 60000;
-                while(n--);
-            }
+            /* should never be reached */
+            LED_GREEN_OUT ^= LED_GREEN_BIT;
+            unsigned n = 60000;
+            while(n--);
         }
     }
 #endif
