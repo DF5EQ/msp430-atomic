@@ -3,6 +3,7 @@
 /* ===== includes ===== */
 #include <msp430.h>
 #include <stdint.h>
+#include "atomic.h"
 
 /* ===== private datatypes ===== */
 
@@ -15,6 +16,8 @@
 
 #define LED_RED_BIT   BIT6
 #define LED_GREEN_BIT BIT0
+
+#define TIMER_PERIODE 1000 /* us */
 
 #define SYSTEM_DCOCLK 16000000
 #define SYSTEM_DIVM   1
@@ -33,6 +36,10 @@
 
 /* ===== private variables ===== */
 
+/* simulated shared word */
+static volatile uint16_t shared_high_word;
+static volatile uint16_t shared_low_word;
+
 /* ===== public variables ===== */
 
 /* ===== private functions ===== */
@@ -41,17 +48,22 @@
 #pragma vector=TIMER3_A0_VECTOR
 __interrupt void Timer3_A0 (void)
 {
-    static counter = 0;
+    static unsigned led_counter = 0;
 
-    /* next interrupt in 1ms */
-    TA3CCR0 = 1000; /* 1ms at SMCLK 1MHz */
+    /* next interrupt in TIMER_PERIODE us */
+    TA3CCR0 = TIMER_PERIODE;
 
-    counter++;
-    if(counter == 1000)
+    /* toggle LED every 1000 interrupts */
+    led_counter++;
+    if(led_counter == 1000)
     {
-        counter = 0;
-        LED_RED_OUT   ^= LED_RED_BIT;
+        led_counter = 0;
+        LED_RED_OUT ^= LED_RED_BIT;
     }
+
+    /* modify the shared word */
+    shared_high_word = 0x0000;
+    shared_low_word  = 0xffff;
 }
 
 /* ===== public functions ===== */
@@ -86,7 +98,7 @@ int main(void)
     TA3EX0 = TAIDEX_0;
 
     /* fist interrupt in 1ms */
-    TA3CCR0 = 1000; /* 1ms at SMCLK 1MHz */
+    TA3CCR0 = TIMER_PERIODE; /* TIMER_PERIODE us at SMCLK 1MHz */
 
     /* enable CCR0 interrupt */
     TA3CCTL0 = CCIE;
@@ -94,14 +106,50 @@ int main(void)
     /* enable general interrupt */
     __bis_status_register(GIE);
 
+#if 1 /* bad, interrupt in between possible */
     while (1)
     {
-        uint16_t counter;
+        shared_low_word  = 0x0000;
+        shared_high_word = 0x0001;
 
-       LED_GREEN_OUT ^= LED_GREEN_BIT;
-
-        /* waste time */
-        counter = 60000;
-        while(counter--);
+        if(shared_low_word == 0x0000)
+        {
+            if(shared_high_word == 0x0000)
+            {
+                /* should never be reached */
+                LED_GREEN_OUT ^= LED_GREEN_BIT;
+                unsigned n = 60000;
+                while(n--);
+            }
+        }
     }
+#endif
+
+#if 0 /* good, interrupt in between blocked */
+    uint16_t copy_high_word;
+    uint16_t copy_low_word;
+
+    while (1)
+    {
+        shared_low_word  = 0x0000;
+        shared_high_word = 0x0001;
+
+        ATOMIC_BLOCK_FORCEON
+        (
+          copy_low_word  = shared_low_word;
+          copy_high_word = shared_high_word;
+        )
+
+        if(copy_low_word == 0x0000)
+        {
+            if(copy_high_word == 0x0000)
+            {
+                /* should never be reached */
+                LED_GREEN_OUT |= LED_GREEN_BIT;
+                unsigned n = 60000;
+                while(n--);
+            }
+        }
+    }
+#endif
 }
