@@ -28,6 +28,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVE
 * no use of for loop  
 * block to be surrounded by () instead of {}  
 * four separate macros instead of two with parameters  
+
 |original                               |modified                    |
 |---------------------------------------|----------------------------|
 |ATOMIC_BLOCK(ATOMIC_RESTORESTATE)      |ATOMIC_BLOCK_RESTORESTATE   | 
