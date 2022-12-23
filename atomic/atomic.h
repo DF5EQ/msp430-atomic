@@ -38,7 +38,7 @@
 /* Changes:                                                                  */
 /*   - no use of for loop                                                    */
 /*   - block to be surrounded by () instead of {}                            */
-/*   - four separate macros instead of two with two possible parameters      */
+/*   - four macros instead of two with parameters                            */
 /*     ATOMIC_BLOCK(   ATOMIC_RESTORESTATE) -->    ATOMIC_BLOCK_RESTORESTATE */
 /*     ATOMIC_BLOCK(   ATOMIC_FORCEON)      -->    ATOMIC_BLOCK_FORCEON      */
 /*  NONATOMIC_BLOCK(NONATOMIC_RESTORESTATE) --> NONATOMIC_BLOCK_RESTORESTATE */
